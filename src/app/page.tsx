@@ -1,103 +1,129 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { processImage } from './actions';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const [svgResult, setSvgResult] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    accept: {
+      'image/*': ['.png', '.jpg', '.jpeg', '.gif']
+    },
+    maxFiles: 1,
+    onDrop: async (acceptedFiles) => {
+      const file = acceptedFiles[0];
+      setFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  const handleProcess = async () => {
+    if (!file) return;
+    
+    setIsProcessing(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const result = await processImage(formData);
+      setSvgResult(result as string);
+    } catch (error) {
+      console.error('Error processing image:', error);
+      alert('Error processing image. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleDownload = () => {
+    if (!svgResult) return;
+    
+    const blob = new Blob([svgResult], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'vectorized-design.svg';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <main className="min-h-screen p-8 bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">
+          Image Vectorizer
+        </h1>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+                ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
+            >
+              <input {...getInputProps()} />
+              {preview ? (
+                <img
+                  src={preview}
+                  alt="Preview"
+                  className="max-w-full h-auto rounded-lg"
+                />
+              ) : (
+                <div className="text-gray-500">
+                  <p className="text-lg mb-2">Drag & drop an image here</p>
+                  <p className="text-sm">or click to select a file</p>
+                </div>
+              )}
+            </div>
+
+            {file && (
+              <button
+                onClick={handleProcess}
+                disabled={isProcessing}
+                className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+                  disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
+              >
+                {isProcessing ? 'Processing...' : 'Process Image'}
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            {svgResult ? (
+              <div className="border rounded-lg p-4 bg-white">
+                <h2 className="text-xl font-semibold mb-4">Vectorized Result</h2>
+                <div className="aspect-square bg-gray-50 rounded-lg mb-4 overflow-hidden">
+                  <div dangerouslySetInnerHTML={{ __html: svgResult }} />
+                </div>
+                <button
+                  onClick={handleDownload}
+                  className="w-full py-3 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 
+                    transition-colors"
+                >
+                  Download SVG
+                </button>
+              </div>
+            ) : (
+              <div className="border rounded-lg p-8 text-center text-gray-500 bg-white">
+                <p>Processed vector will appear here</p>
+              </div>
+            )}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+    </main>
   );
 }
