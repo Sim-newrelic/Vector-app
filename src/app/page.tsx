@@ -4,6 +4,14 @@ import { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { processImage } from './actions';
 
+function injectSvgAttributes(svg: string) {
+  // Add width, height, and preserveAspectRatio to the <svg> tag
+  return svg.replace(
+    /<svg([^>]*)>/,
+    '<svg$1 width="100%" height="100%" preserveAspectRatio="xMidYMid meet">'
+  );
+}
+
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -32,6 +40,7 @@ export default function Home() {
     if (!file) return;
     
     setIsProcessing(true);
+    setSvgResult(null);
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -102,25 +111,31 @@ export default function Home() {
           </div>
 
           <div className="space-y-4">
-            {svgResult ? (
-              <div className="border rounded-lg p-4 bg-white">
-                <h2 className="text-xl font-semibold mb-4">Vectorized Result</h2>
-                <div className="aspect-square bg-gray-50 rounded-lg mb-4 overflow-hidden">
-                  <div dangerouslySetInnerHTML={{ __html: svgResult }} />
-                </div>
-                <button
-                  onClick={handleDownload}
-                  className="w-full py-3 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 
-                    transition-colors"
-                >
-                  Download SVG
-                </button>
+            <div className="border rounded-lg p-4 bg-white">
+              <h2 className="text-xl font-semibold mb-4 text-gray-400">
+                Vectorized Result
+              </h2>
+              <div className="aspect-square bg-gray-50 rounded-lg mb-4 overflow-hidden flex items-center justify-center" style={{ minHeight: 320 }}>
+                {isProcessing ? (
+                  <div className="text-gray-400 animate-pulse">Processing...</div>
+                ) : svgResult ? (
+                  <div
+                    className="w-full h-full flex items-center justify-center"
+                    style={{ minHeight: 320 }}
+                    dangerouslySetInnerHTML={{ __html: injectSvgAttributes(svgResult) }}
+                  />
+                ) : (
+                  <div className="text-gray-400">Processed vector will appear here</div>
+                )}
               </div>
-            ) : (
-              <div className="border rounded-lg p-8 text-center text-gray-500 bg-white">
-                <p>Processed vector will appear here</p>
-              </div>
-            )}
+              <button
+                onClick={handleDownload}
+                className="w-full py-3 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                disabled={!svgResult || isProcessing}
+              >
+                Download SVG
+              </button>
+            </div>
           </div>
         </div>
       </div>
