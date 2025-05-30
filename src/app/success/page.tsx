@@ -1,9 +1,17 @@
 'use client';
+import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 export default function SuccessPage() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session_id');
+
+  useEffect(() => {
+    if (sessionId) {
+      console.log('SuccessPage: Setting canDownload to true in localStorage');
+      localStorage.setItem('canDownload', 'true');
+    }
+  }, [sessionId]);
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-green-50">

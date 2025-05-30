@@ -46,40 +46,51 @@ export default function Home() {
     onDrop: async (acceptedFiles) => {
       const file = acceptedFiles[0];
       setFile(file);
-      
+      localStorage.removeItem('svgResult'); // Clear SVG if new file
       // Create preview
       const reader = new FileReader();
       reader.onload = () => {
         setPreview(reader.result as string);
+        localStorage.setItem('preview', reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   });
 
   useEffect(() => {
-    // Check for payment confirmation via session_id in URL
-    const sessionId = searchParams.get('session_id');
+    // Check for payment confirmation via session_id in URL or localStorage
+    const sessionId = searchParams?.get('session_id');
+    const paid = localStorage.getItem('canDownload') === 'true';
+    console.log('useEffect: sessionId', sessionId, 'paid', paid);
     if (sessionId) {
       localStorage.setItem('canDownload', 'true');
       setCanDownload(true);
-    } else if (localStorage.getItem('canDownload') === 'true') {
+    } else if (paid) {
       setCanDownload(true);
     } else {
       setCanDownload(false);
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    // Restore preview and SVG result from localStorage
+    const savedPreview = localStorage.getItem('preview');
+    const savedSvg = localStorage.getItem('svgResult');
+    if (savedPreview) setPreview(savedPreview);
+    if (savedSvg) setSvgResult(savedSvg);
+    console.log('Restored preview and svgResult from localStorage', savedPreview, savedSvg);
+  }, []);
+
   const handleProcess = async () => {
     if (!file) return;
-    
     setIsProcessing(true);
     setSvgResult(null);
     try {
       const formData = new FormData();
       formData.append('file', file);
-      
       const result = await processImage(formData);
       setSvgResult(result as string);
+      localStorage.setItem('svgResult', result as string);
     } catch (error) {
       console.error('Error processing image:', error);
       alert('Error processing image. Please try again.');
@@ -89,8 +100,12 @@ export default function Home() {
   };
 
   const handleDownload = () => {
+    console.log('handleDownload called', { svgResult, canDownload });
     if (!svgResult) return;
-    
+    if (!canDownload) {
+      alert('You must pay to download.');
+      return;
+    }
     const blob = new Blob([svgResult], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
