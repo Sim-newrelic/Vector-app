@@ -205,7 +205,13 @@ export default function Home() {
         </div>
       </div>
       <footer className="w-full text-center mt-12 mb-4 text-xs text-gray-400">
-        Contact: <a href="mailto:support@instantvector.com" className="text-blue-600 hover:underline">support@instantvector.com</a>
+        <div className="max-w-xl mx-auto px-2">
+          <div className="mb-2 text-gray-500">
+            <strong>Refund & Cancellation Policy:</strong><br />
+            All purchases are final. Due to the nature of digital products and instant delivery, we are unable to offer refunds. However, if you experience any issues with your file or download, please don't hesitate to contact us at <a href="mailto:support@instantvector.com" className="text-blue-600 hover:underline">support@instantvector.com</a> — we're here to help and will do our best to resolve any problems.<br /><br />
+            If you would like to cancel your subscription, simply email us at <a href="mailto:support@instantvector.com" className="text-blue-600 hover:underline">support@instantvector.com</a>. We'll process your cancellation within 24 hours and confirm once it's complete.
+          </div>
+        </div>
       </footer>
     </main>
   );

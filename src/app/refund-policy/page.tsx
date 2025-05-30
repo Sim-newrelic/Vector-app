@@ -6,11 +6,8 @@ export default function RefundPolicyPage() {
       <div className="bg-white p-8 rounded-lg shadow-md max-w-xl w-full text-center">
         <h1 className="text-3xl font-bold mb-4 text-gray-800">Refund Policy</h1>
         <p className="mb-6 text-gray-700">
-          All sales are final. We do not offer refunds for any purchases made on InstantVector.com. If you have any questions or concerns about your order, please contact us.
+          All purchases are final. Due to the nature of digital products and instant delivery, we are unable to offer refunds. However, if you experience any issues with your file or download, please don't hesitate to contact us at <a href="mailto:support@instantvector.com" className="text-blue-600 hover:underline">support@instantvector.com</a> — we're here to help and will do our best to resolve any problems.
         </p>
-        <div className="mt-8 text-gray-500 text-sm">
-          Contact: <a href="mailto:support@instantvector.com" className="text-blue-600 hover:underline">support@instantvector.com</a>
-        </div>
       </div>
     </main>
   );
