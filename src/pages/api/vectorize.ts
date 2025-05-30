@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 // @ts-ignore: No types for formidable
-import formidable from 'formidable';
+import { IncomingForm } from 'formidable';
 import fs from 'fs';
 
 export const config = {
@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return;
   }
 
-  const form = new formidable.IncomingForm({ multiples: false });
+  const form = new IncomingForm({ multiples: false });
 
   console.log('Starting vectorize API handler');
   console.log('API handler started');
