@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { processImage } from './actions';
+import { loadStripe } from '@stripe/stripe-js';
 
 function injectSvgAttributes(svg: string) {
   // Add width, height, and preserveAspectRatio to the <svg> tag
@@ -11,6 +12,22 @@ function injectSvgAttributes(svg: string) {
     '<svg$1 width="100%" height="100%" preserveAspectRatio="xMidYMid meet">'
   );
 }
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
+
+const handleStripeCheckout = async (type: 'one_time' | 'subscription') => {
+  const res = await fetch('/api/checkout-session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type }),
+  });
+  const data = await res.json();
+  if (data.url) {
+    window.location.href = data.url;
+  } else {
+    alert('Error creating Stripe session');
+  }
+};
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
@@ -75,6 +92,20 @@ export default function Home() {
         <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">
           Image Vectorizer
         </h1>
+        <div className="flex flex-col md:flex-row gap-4 mb-8 justify-center">
+          <button
+            onClick={() => handleStripeCheckout('one_time')}
+            className="py-3 px-6 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            One-Time Download ($1)
+          </button>
+          <button
+            onClick={() => handleStripeCheckout('subscription')}
+            className="py-3 px-6 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+          >
+            Unlimited Subscription ($5/month)
+          </button>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="space-y-4">
