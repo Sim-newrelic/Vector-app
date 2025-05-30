@@ -16,7 +16,14 @@ export async function processImage(formData: FormData) {
   });
   if (!res.ok) {
     const error = await res.json().catch(() => ({}));
-    throw new Error(error.error || 'Failed to process image');
+    throw new Error(
+      JSON.stringify({
+        message: error.error || 'Failed to process image',
+        details: error.details,
+        status: error.status,
+        statusText: error.statusText
+      })
+    );
   }
   return await res.text();
 } 

@@ -85,8 +85,16 @@ export default function HomeClient() {
       const result = await processImage(formData);
       setSvgResult(result as string);
       localStorage.setItem('svgResult', result as string);
-    } catch (error) {
-      alert('Error processing image. Please try again.');
+    } catch (error: any) {
+      let errorMessage = 'Error processing image. Please try again.';
+      try {
+        const errorDetails = JSON.parse(error.message);
+        errorMessage = `Error: ${errorDetails.message}\nDetails: ${errorDetails.details || 'No additional details'}`;
+      } catch {
+        // If parsing fails, use the original error message
+      }
+      alert(errorMessage);
+      console.error('Processing error:', error);
     } finally {
       setIsProcessing(false);
     }
