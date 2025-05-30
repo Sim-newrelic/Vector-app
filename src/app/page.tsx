@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { processImage } from './actions';
 import { loadStripe } from '@stripe/stripe-js';
+import { useSearchParams } from 'next/navigation';
 
 function injectSvgAttributes(svg: string) {
   // Add width, height, and preserveAspectRatio to the <svg> tag
@@ -34,6 +35,8 @@ export default function Home() {
   const [preview, setPreview] = useState<string | null>(null);
   const [svgResult, setSvgResult] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [canDownload, setCanDownload] = useState(false);
+  const searchParams = useSearchParams();
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
@@ -52,6 +55,19 @@ export default function Home() {
       reader.readAsDataURL(file);
     }
   });
+
+  useEffect(() => {
+    // Check for payment confirmation via session_id in URL
+    const sessionId = searchParams.get('session_id');
+    if (sessionId) {
+      localStorage.setItem('canDownload', 'true');
+      setCanDownload(true);
+    } else if (localStorage.getItem('canDownload') === 'true') {
+      setCanDownload(true);
+    } else {
+      setCanDownload(false);
+    }
+  }, [searchParams]);
 
   const handleProcess = async () => {
     if (!file) return;
@@ -162,9 +178,9 @@ export default function Home() {
               <button
                 onClick={handleDownload}
                 className="w-full py-3 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                disabled={!svgResult || isProcessing}
+                disabled={!svgResult || isProcessing || !canDownload}
               >
-                Download SVG
+                {canDownload ? 'Download SVG' : 'Pay to Download'}
               </button>
             </div>
           </div>
