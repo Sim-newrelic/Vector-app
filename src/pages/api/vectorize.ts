@@ -3,17 +3,8 @@ import { writeFile, unlink } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import sharp from 'sharp';
-
-const Potrace = require('potrace');
-
-function traceAsync(path: string, options: any) {
-  return new Promise<string>((resolve, reject) => {
-    Potrace.trace(path, options, (err: Error | null, svg: string) => {
-      if (err) reject(err);
-      else resolve(svg);
-    });
-  });
-}
+// @ts-ignore: No types for imagetracerjs
+import ImageTracer from 'imagetracerjs';
 
 export const config = {
   api: {
@@ -56,26 +47,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
       outputPath = join(tmpdir(), `output-${Date.now()}.png`);
 
-      // Process the image with Sharp
+      // Process the image with Sharp and get PNG buffer
       console.log('Processing image with sharp:', inputPath, '->', outputPath);
-      await sharp(inputPath)
+      const pngBuffer = await sharp(inputPath)
         .resize(1000, 1000, { fit: 'inside' })
         .removeAlpha()
         .threshold(128)
-        .toFile(outputPath);
+        .png()
+        .toBuffer();
 
-      // Vectorize with Potrace
-      console.log('Vectorizing with Potrace:', outputPath);
-      const svg = await traceAsync(outputPath, {
-        threshold: 128,
-        turdSize: 100,
-        optCurve: true,
-        optTolerance: 0.2,
-        blackOnWhite: true,
+      // Use imagetracerjs to convert PNG buffer to SVG
+      console.log('Vectorizing with ImageTracerJS');
+      // Convert buffer to base64 data URL
+      const base64 = pngBuffer.toString('base64');
+      const dataUrl = `data:image/png;base64,${base64}`;
+      const svg = await new Promise<string>((resolve) => {
+        ImageTracer.imageToSVG(dataUrl, (svgString: string) => {
+          resolve(svgString);
+        }, {});
       });
-
-      // Clean up temp files
-      await unlink(outputPath);
 
       res.setHeader('Content-Type', 'image/svg+xml');
       res.status(200).send(svg);
