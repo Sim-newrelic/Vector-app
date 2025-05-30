@@ -35,6 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let outputPath: string | null = null;
     try {
       if (err) {
+        console.error('Formidable parse error:', err);
         res.status(400).json({ error: 'Error parsing form data' });
         return;
       }
@@ -42,18 +43,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const fileField = files.file;
       const file = Array.isArray(fileField) ? fileField[0] : fileField;
       if (!file) {
+        console.error('No file provided in upload.');
         res.status(400).json({ error: 'No file provided' });
         return;
       }
 
       inputPath = file.filepath || file.path;
       if (!inputPath) {
+        console.error('Invalid file path:', file);
         res.status(400).json({ error: 'Invalid file path' });
         return;
       }
       outputPath = join(tmpdir(), `output-${Date.now()}.png`);
 
       // Process the image with Sharp
+      console.log('Processing image with sharp:', inputPath, '->', outputPath);
       await sharp(inputPath)
         .resize(1000, 1000, { fit: 'inside' })
         .removeAlpha()
@@ -61,6 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .toFile(outputPath);
 
       // Vectorize with Potrace
+      console.log('Vectorizing with Potrace:', outputPath);
       const svg = await traceAsync(outputPath, {
         threshold: 128,
         turdSize: 100,
@@ -75,6 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.setHeader('Content-Type', 'image/svg+xml');
       res.status(200).send(svg);
     } catch (error: any) {
+      console.error('Image processing error:', error);
       if (outputPath) await unlink(outputPath).catch(() => {});
       res.status(500).json({ error: error.message || 'Failed to process image' });
     }
