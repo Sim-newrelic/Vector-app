@@ -1,3 +1,5 @@
+'use client';
+
 export default function CancelPage() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-red-50">
