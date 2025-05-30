@@ -159,6 +159,9 @@ export default function Home() {
                 </div>
               )}
             </div>
+            <p className="text-xs text-gray-400 mt-2 text-center">
+              Supported formats: PNG, JPG, JPEG, GIF, BMP, TIFF, WEBP, PDF, EPS, PSD, AI, SVG
+            </p>
 
             {file && (
               <button
@@ -201,6 +204,9 @@ export default function Home() {
           </div>
         </div>
       </div>
+      <footer className="w-full text-center mt-12 mb-4 text-xs text-gray-400">
+        Contact: <a href="mailto:support@instantvector.com" className="text-blue-600 hover:underline">support@instantvector.com</a>
+      </footer>
     </main>
   );
 }
