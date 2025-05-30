@@ -1,5 +1,6 @@
 declare module 'busboy' {
   import { IncomingMessage } from 'http';
+  import { Writable } from 'stream';
 
   interface BusboyConfig {
     headers: IncomingMessage['headers'];
@@ -14,7 +15,7 @@ declare module 'busboy' {
     };
   }
 
-  interface Busboy extends NodeJS.EventEmitter {
+  interface Busboy extends NodeJS.EventEmitter, Writable {
     on(event: 'file', listener: (fieldname: string, file: NodeJS.ReadableStream, info: { filename: string; encoding: string; mimeType: string }) => void): this;
     on(event: 'field', listener: (fieldname: string, val: string, info: { nameTruncated: boolean; valueTruncated: boolean; encoding: string; mimeType: string }) => void): this;
     on(event: 'finish', listener: () => void): this;
