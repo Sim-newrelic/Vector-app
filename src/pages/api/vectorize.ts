@@ -80,7 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.setHeader('Content-Type', 'image/svg+xml');
       res.status(200).send(svg);
     } catch (error: any) {
-      console.error('Image processing error:', error);
+      console.error('Image processing error:', error, error?.stack);
       if (outputPath) await unlink(outputPath).catch(() => {});
       res.status(500).json({ error: error.message || 'Failed to process image' });
     }
