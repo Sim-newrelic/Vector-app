@@ -1,7 +1,7 @@
 'use client';
 export const dynamic = "force-dynamic";
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { processImage } from './actions';
 import { loadStripe } from '@stripe/stripe-js';
@@ -119,103 +119,101 @@ export default function Home() {
   };
 
   return (
-    <Suspense>
-      <main className="min-h-screen p-8 bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">
-            Image Vectorizer
-          </h1>
-          <div className="flex flex-col md:flex-row gap-4 mb-8 justify-center">
-            <button
-              onClick={() => handleStripeCheckout('one_time')}
-              className="py-3 px-6 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+    <main className="min-h-screen p-8 bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">
+          Image Vectorizer
+        </h1>
+        <div className="flex flex-col md:flex-row gap-4 mb-8 justify-center">
+          <button
+            onClick={() => handleStripeCheckout('one_time')}
+            className="py-3 px-6 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            One-Time Download ($1)
+          </button>
+          <button
+            onClick={() => handleStripeCheckout('subscription')}
+            className="py-3 px-6 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+          >
+            Unlimited Subscription ($5/month)
+          </button>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
+                ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
             >
-              One-Time Download ($1)
-            </button>
-            <button
-              onClick={() => handleStripeCheckout('subscription')}
-              className="py-3 px-6 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
-            >
-              Unlimited Subscription ($5/month)
-            </button>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <div
-                {...getRootProps()}
-                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors
-                  ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}
-              >
-                <input {...getInputProps()} />
-                {preview ? (
-                  <img
-                    src={preview}
-                    alt="Preview"
-                    className="max-w-full h-auto rounded-lg"
-                  />
-                ) : (
-                  <div className="text-gray-500">
-                    <p className="text-lg mb-2">Drag & drop an image here</p>
-                    <p className="text-sm">or click to select a file</p>
-                  </div>
-                )}
-              </div>
-              <p className="text-xs text-gray-400 mt-2 text-center">
-                Supported formats: PNG, JPG, JPEG, GIF, BMP, TIFF, WEBP, PDF, EPS, PSD, AI, SVG
-              </p>
-
-              {file && (
-                <button
-                  onClick={handleProcess}
-                  disabled={isProcessing}
-                  className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
-                    disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
-                >
-                  {isProcessing ? 'Processing...' : 'Process Image'}
-                </button>
+              <input {...getInputProps()} />
+              {preview ? (
+                <img
+                  src={preview}
+                  alt="Preview"
+                  className="max-w-full h-auto rounded-lg"
+                />
+              ) : (
+                <div className="text-gray-500">
+                  <p className="text-lg mb-2">Drag & drop an image here</p>
+                  <p className="text-sm">or click to select a file</p>
+                </div>
               )}
             </div>
+            <p className="text-xs text-gray-400 mt-2 text-center">
+              Supported formats: PNG, JPG, JPEG, GIF, BMP, TIFF, WEBP, PDF, EPS, PSD, AI, SVG
+            </p>
 
-            <div className="space-y-4">
-              <div className="border rounded-lg p-4 bg-white">
-                <h2 className="text-xl font-semibold mb-4 text-gray-400">
-                  Vectorized Result
-                </h2>
-                <div className="aspect-square bg-gray-50 rounded-lg mb-4 overflow-hidden flex items-center justify-center" style={{ minHeight: 320 }}>
-                  {isProcessing ? (
-                    <div className="text-gray-400 animate-pulse">Processing...</div>
-                  ) : svgResult ? (
-                    <div
-                      className="w-full h-full flex items-center justify-center"
-                      style={{ minHeight: 320 }}
-                      dangerouslySetInnerHTML={{ __html: injectSvgAttributes(svgResult) }}
-                    />
-                  ) : (
-                    <div className="text-gray-400">Processed vector will appear here</div>
-                  )}
-                </div>
-                <button
-                  onClick={handleDownload}
-                  className="w-full py-3 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                  disabled={!svgResult || isProcessing || !canDownload}
-                >
-                  {canDownload ? 'Download SVG' : 'Pay to Download'}
-                </button>
+            {file && (
+              <button
+                onClick={handleProcess}
+                disabled={isProcessing}
+                className="w-full py-3 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
+                  disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
+              >
+                {isProcessing ? 'Processing...' : 'Process Image'}
+              </button>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <div className="border rounded-lg p-4 bg-white">
+              <h2 className="text-xl font-semibold mb-4 text-gray-400">
+                Vectorized Result
+              </h2>
+              <div className="aspect-square bg-gray-50 rounded-lg mb-4 overflow-hidden flex items-center justify-center" style={{ minHeight: 320 }}>
+                {isProcessing ? (
+                  <div className="text-gray-400 animate-pulse">Processing...</div>
+                ) : svgResult ? (
+                  <div
+                    className="w-full h-full flex items-center justify-center"
+                    style={{ minHeight: 320 }}
+                    dangerouslySetInnerHTML={{ __html: injectSvgAttributes(svgResult) }}
+                  />
+                ) : (
+                  <div className="text-gray-400">Processed vector will appear here</div>
+                )}
               </div>
+              <button
+                onClick={handleDownload}
+                className="w-full py-3 px-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                disabled={!svgResult || isProcessing || !canDownload}
+              >
+                {canDownload ? 'Download SVG' : 'Pay to Download'}
+              </button>
             </div>
           </div>
         </div>
-        <footer className="w-full text-center mt-12 mb-4 text-xs text-gray-400">
-          <div className="max-w-xl mx-auto px-2">
-            <div className="mb-2 text-gray-500">
-              <strong>Refund & Cancellation Policy:</strong><br />
-              All purchases are final. Due to the nature of digital products and instant delivery, we are unable to offer refunds. However, if you experience any issues with your file or download, please don't hesitate to contact us at <a href="mailto:support@instantvector.com" className="text-blue-600 hover:underline">support@instantvector.com</a> — we're here to help and will do our best to resolve any problems.<br /><br />
-              If you would like to cancel your subscription, simply email us at <a href="mailto:support@instantvector.com" className="text-blue-600 hover:underline">support@instantvector.com</a>. We'll process your cancellation within 24 hours and confirm once it's complete.
-            </div>
+      </div>
+      <footer className="w-full text-center mt-12 mb-4 text-xs text-gray-400">
+        <div className="max-w-xl mx-auto px-2">
+          <div className="mb-2 text-gray-500">
+            <strong>Refund & Cancellation Policy:</strong><br />
+            All purchases are final. Due to the nature of digital products and instant delivery, we are unable to offer refunds. However, if you experience any issues with your file or download, please don't hesitate to contact us at <a href="mailto:support@instantvector.com" className="text-blue-600 hover:underline">support@instantvector.com</a> — we're here to help and will do our best to resolve any problems.<br /><br />
+            If you would like to cancel your subscription, simply email us at <a href="mailto:support@instantvector.com" className="text-blue-600 hover:underline">support@instantvector.com</a>. We'll process your cancellation within 24 hours and confirm once it's complete.
           </div>
-        </footer>
-      </main>
-    </Suspense>
+        </div>
+      </footer>
+    </main>
   );
 }
