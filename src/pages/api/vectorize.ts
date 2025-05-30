@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { IncomingForm } from 'formidable';
 import fs from 'fs';
-import FormData from 'form-data';
+import fetch from 'node-fetch';
 
 export const config = {
   api: {
@@ -45,31 +45,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return;
       }
 
-      // Prepare form-data for the API request
-      const formData = new FormData();
-      formData.append('image', fs.createReadStream(inputPath));
+      const imageBuffer = fs.readFileSync(inputPath);
 
-      const apiId = process.env.VECTORIZER_API_ID;
-      const apiSecret = process.env.VECTORIZER_API_SECRET;
-      if (!apiId || !apiSecret) {
-        res.status(500).json({ error: 'Vectorizer.AI credentials not set' });
+      const apiKey = process.env.VECTORIZER_API_KEY;
+      if (!apiKey) {
+        res.status(500).json({ error: 'VectorizerAPI.com API key not set' });
         return;
       }
-      const auth = Buffer.from(`${apiId}:${apiSecret}`).toString('base64');
 
-      const response = await fetch('https://api.vectorizer.ai/api/v1/vectorize', {
+      const response = await fetch('https://vectorizerapi.com/api/v1/vectorize', {
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${auth}`,
-          ...formData.getHeaders(),
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/octet-stream',
         },
-        body: formData,
+        body: imageBuffer,
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Vectorizer.AI error:', errorText);
-        res.status(500).json({ error: 'Vectorizer.AI API error', details: errorText });
+        console.error('VectorizerAPI.com API error:', errorText);
+        res.status(500).json({ error: 'VectorizerAPI.com API error', details: errorText });
         return;
       }
 
