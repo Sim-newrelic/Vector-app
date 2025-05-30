@@ -35,7 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         res.status(400).json({ error: 'No file provided' });
         return;
       }
-      const inputPath = file.filepath || file.path;
+      const inputPath = (file as any).filepath || (file as any).path;
       console.log('inputPath:', inputPath);
       console.log('File exists:', fs.existsSync(inputPath));
       if (!inputPath || !fs.existsSync(inputPath)) {
