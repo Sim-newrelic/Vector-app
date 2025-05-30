@@ -17,20 +17,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const form = new IncomingForm({ multiples: false });
 
+  console.log('Handler started');
   form.parse(req, async (err, fields, files) => {
     try {
+      console.log('Form parse callback');
       if (err) {
+        console.error('Formidable parse error:', err);
         res.status(400).json({ error: 'Error parsing form data' });
         return;
       }
+      console.log('Fields:', fields);
+      console.log('Files:', files);
+
       const fileField = files.file;
       const file = Array.isArray(fileField) ? fileField[0] : fileField;
       if (!file) {
+        console.error('No file provided in upload.');
         res.status(400).json({ error: 'No file provided' });
         return;
       }
       const inputPath = file.filepath || file.path;
-      if (!inputPath) {
+      console.log('inputPath:', inputPath);
+      console.log('File exists:', fs.existsSync(inputPath));
+      if (!inputPath || !fs.existsSync(inputPath)) {
+        console.error('Invalid file path or file does not exist:', file);
         res.status(400).json({ error: 'Invalid file path' });
         return;
       }
@@ -58,6 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       if (!response.ok) {
         const errorText = await response.text();
+        console.error('Vectorizer.AI error:', errorText);
         res.status(500).json({ error: 'Vectorizer.AI API error', details: errorText });
         return;
       }
@@ -66,7 +77,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.setHeader('Content-Type', 'image/svg+xml');
       res.status(200).send(svg);
     } catch (error: any) {
-      res.status(500).json({ error: error.message || 'Failed to process image' });
+      console.error('Image processing error:', error, error?.stack);
+      res.status(500).json({ error: error.message || 'Failed to process image', details: error.stack });
     }
   });
 }
