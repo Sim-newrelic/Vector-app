@@ -91,9 +91,9 @@ export default function HomeClient() {
         method: "POST",
         body: formData,
       });
-      const svg = await result.text();
-      setSvgResult(svg);
-      localStorage.setItem("svgResult", svg);
+      const data = await result.json();
+      setSvgResult(data.url);
+      localStorage.setItem("svgResult", data.url);
     } catch (error: any) {
       let errorMessage = "Error processing image. Please try again.";
       try {
@@ -117,15 +117,12 @@ export default function HomeClient() {
       alert("You must pay to download.");
       return;
     }
-    const blob = new Blob([svgResult], { type: "image/svg+xml" });
-    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url;
+    a.href = svgResult;
     a.download = "vectorized-design.svg";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    URL.revokeObjectURL(url);
   };
 
   return (
@@ -202,13 +199,9 @@ export default function HomeClient() {
                     Processing...
                   </div>
                 ) : svgResult ? (
-                  <div
-                    className="w-full h-full flex items-center justify-center"
-                    style={{ minHeight: 320 }}
-                    dangerouslySetInnerHTML={{
-                      __html: injectSvgAttributes(svgResult),
-                    }}
-                  />
+                  <div className="w-full h-full flex items-center justify-center" style={{ minHeight: 320 }}>
+                    <img src={svgResult} alt="Vectorized result" className="max-w-full h-auto" />
+                  </div>
                 ) : (
                   <div className="text-gray-400">
                     Processed vector will appear here

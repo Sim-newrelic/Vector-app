@@ -2,6 +2,8 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import Busboy from "busboy";
 import FormData from "form-data";
 import fetch, { Response } from "node-fetch";
+import { uploadToS3 } from '../../utils/s3';
+import { v4 as uuidv4 } from 'uuid';
 
 export const config = {
   api: {
@@ -83,8 +85,16 @@ export default async function handler(
         return;
       }
 
-      res.setHeader("Content-Type", "image/svg+xml");
-      res.status(200).send(responseText);
+      // Upload the SVG to S3
+      const svgBuffer = Buffer.from(responseText);
+      const fileName = `${uuidv4()}.svg`;
+      const signedUrl = await uploadToS3(svgBuffer, fileName);
+      
+      // Return the signed URL instead of the SVG content
+      res.status(200).json({ 
+        url: signedUrl,
+        message: "SVG uploaded successfully"
+      });
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Unknown error occurred";
